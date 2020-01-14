@@ -1,0 +1,615 @@
+   \section{Code for \textit{SMV Parser in C}}
+     \begin{lstlisting}[language=C, caption=SMV parser Code in C]
+#define _CRT_SECURE_NO_WARNINGS
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+char * trim_space(char *str) {
+	char *end;
+	/* skip leading whitespace */
+	while (isspace(*str)) {
+		str = str + 1;
+	}
+	/* remove trailing whitespace */
+	end = str + strlen(str) - 1;
+	int iter = strlen(str);
+	while (end > str && isspace(*end)) {
+		end = end - 1;
+
+		iter--;
+	}
+	/* write null character */
+	*(end + 1) = '\0';
+	//str[iter] = '\0';
+	return str;
+}
+
+char * initail_sub(char* string, char* search){
+	char initial[100] = { "" };
+	int dlenstr = strlen(string);
+	if (dlenstr > 0)
+	{
+		char *pfound = strstr(string, search); //pointer to the first character found 's' in the string saux
+		if (pfound != NULL)
+		{
+			int dposfound = (int)(pfound - string); //saux is already pointing to the first string character 't'.
+			for (int i = 0; i < dposfound; i++){
+				initial[i] = string[i];
+			}
+		}
+	}
+
+
+	return trim_space(initial);
+}
+
+char * end_sub(char* string, char* search){
+	char end[100] = { "" };
+	int dlenstr = strlen(string);
+	if (dlenstr > 0)
+	{
+		char *pfound = strstr(string, search); //pointer to the first character found 's' in the string saux
+		if (pfound != NULL)
+		{
+			int dposfound = (int)(pfound - string); //saux is already pointing to the first string character 't'.
+			for (int i = dposfound + strlen(search); i < strlen(string); i++){
+				end[i - (dposfound + strlen(search))] = string[i];
+			}
+		}
+	}
+	return trim_space(end);
+}
+
+char* replace_char(char* str, char find, char find1, char find2, char find3){
+	int iter = 0;
+	int str_iter = 0;
+	char new_str[100] = { "" };
+	while (iter < strlen(str)){
+		if (str[iter] == find || str[iter] == find1 || str[iter] == find2 || str[iter] == find3){
+
+		}
+		else{
+			new_str[str_iter] = str[iter];
+			str_iter++;
+		}
+		iter++;
+	}
+
+
+	return new_str;
+}
+char *changewords_1(char *sentence, char *find, char *replace)
+{
+	char dest[5000] = { "" };// malloc(strlen(sentence) - strlen(find) + strlen(replace) + 1);
+	char *destptr = dest;
+
+	*dest = 0;
+
+	while (*sentence)
+	{
+		if (!strncmp(sentence, find, strlen(find)))
+		{
+			strcat(destptr, replace);
+			sentence += strlen(find);
+			destptr += strlen(replace);
+		}
+		else
+		{
+			*destptr = *sentence;
+			destptr++;
+			sentence++;
+		}
+	}
+	*destptr = 0;
+	return dest;
+}
+int main()
+{
+	/////*char ssc[100] = "   qw dsad   ";
+	////char* trim_test = trim_space(ssc);*/
+
+
+	printf("Hello world\n");
+	char ch;
+	char str[200] = "C:\\Users\\NEXGEN\\Desktop\\benchmarks\\c5315 - umair.smv";;
+
+	///*printf("Enter SMV File path \n");
+	//scan*/f("%s", &str);
+
+
+	/* declare a file pointer */
+	FILE    *infile;
+	char    *buffer;
+	long    numbytes;
+
+	/* open an existing file for reading */
+	infile = fopen(str, "r");
+	/* quit if the file does not exist */
+	if (infile == NULL)
+		return 1;
+
+	/* Get the number of bytes */
+	fseek(infile, 0L, SEEK_END);
+	numbytes = ftell(infile);
+
+	/* reset the file position indicator to
+	the beginning of the file */
+	fseek(infile, 0L, SEEK_SET);
+
+	/* grab sufficient memory for the
+	buffer to hold the text */
+	buffer = (char*)calloc(numbytes, sizeof(char));
+
+	/* memory error */
+	if (buffer == NULL)
+		return 1;
+
+	/* copy all the text into the buffer */
+	fread(buffer, sizeof(char), numbytes, infile);
+	fclose(infile);
+
+	/* confirm we have read the file by
+	outputing it to the console */
+	//	printf("The file called test.dat contains this text\n\n%s", buffer);
+
+	char mydata[10000] = { "" };
+
+	char *ptr = strstr(buffer, "VAR");
+	char inputs[1000] = { "" };
+	char outputs[1000] = { "" };
+	char outputs2[1000] = { "" };
+	char* out1_trim = NULL;
+	char* out2_trim = NULL;
+	char* in_trim = NULL;
+
+	if (ptr != NULL) /* Substring found */
+	{
+		printf("'%s' contains '%s'\n", str, "VAR");
+		int len = strlen(ptr);
+		for (int i = 3; i < len - 3; i++)mydata[i - 3] = ptr[i];
+
+		len = strlen(mydata);
+		int define_ind = 0;
+		for (int i = 0; i < len - 5; i++){
+			if (mydata[i] == 'D' && mydata[i + 1] == 'E' &&mydata[i + 2] == 'F' &&mydata[i + 3] == 'I' &&mydata[i + 4] == 'N' && mydata[i + 5] == 'E'){
+				define_ind = i;
+				break;
+			}
+			inputs[i] = mydata[i];
+		}
+		define_ind = define_ind + 6;
+		int end = len - (define_ind);
+		for (int i = 0; i < end; i++){
+			if (mydata[i + define_ind] == 'D' && mydata[i + define_ind + 1] == 'E' &&mydata[i + define_ind + 2] == 'F' &&mydata[i + define_ind + 3] == 'I' &&mydata[i + define_ind + 4] == 'N' && mydata[i + define_ind + 5] == 'E'){
+				define_ind = i + define_ind;
+				break;
+			}
+			outputs[i] = mydata[i + define_ind];
+		}
+		define_ind = define_ind + 6;
+		end = len - (define_ind);
+		for (int i = 0; i < end; i++){
+			outputs2[i] = mydata[define_ind + i];
+		}
+		out2_trim = trim_space(outputs2);
+		out1_trim = trim_space(outputs);
+		in_trim = trim_space(inputs);
+
+		char expressions[1000][100] = { "" };
+		int expression_iter = 0;
+
+
+		char out2_lines[1000][100] = { "" };
+		char out1_lines[1000][100] = { "" };
+
+		int line_iter1 = 0;
+		int line_iter2 = 0;
+		char *ch_o2;
+		ch_o2 = strtok(out2_trim, "\n");
+		while (ch_o2 != NULL) {
+			printf("%s\n", ch_o2);
+			strcpy(out2_lines[line_iter2], ch_o2);
+			line_iter2++;
+			ch_o2 = strtok(NULL, "\n");
+		}
+
+
+		ch_o2 = strtok(out1_trim, "\n");
+		while (ch_o2 != NULL) {
+			printf("%s\n", ch_o2);
+			strcpy(out1_lines[line_iter1], ch_o2);
+			line_iter1++;
+			ch_o2 = strtok(NULL, "\n");
+		}
+
+
+		int v_iter1 = 0; int v_iter2 = 0;
+
+		while (v_iter2 < line_iter2){
+			v_iter1 = 0;
+			while (v_iter1 < line_iter1){
+
+				char initial_o1[100] = { "" };
+				char end_o1[100] = { "" };
+				char *a = initail_sub(out1_lines[v_iter1], ":=");
+				strcpy(initial_o1, a);
+				char *b = end_sub(out1_lines[v_iter1], ":=");
+				strcpy(end_o1, b);
+
+				char initial_o2[100] = { "" };
+				char end_o2[100] = { "" };
+				char word2[1000] = { "" };
+				strcpy(word2, out2_lines[v_iter2]);
+
+				char *a2 = initail_sub(word2, ":=");
+				strcpy(initial_o2, a2);
+				char *b2 = end_sub(word2, ":=");
+				strcpy(end_o2, b2);
+
+				char arr[100] = { "" };
+				char brr[100] = { "" };
+				char *az = replace_char(end_o2, '"', ';', ')', '(');
+				strcpy(arr, az);
+				char *tm = replace_char(initial_o1, '"', ';', ')', '(');
+				strcpy(brr, tm);
+				if (strcmp(arr, brr) == 0)
+				{
+					printf("i found it");
+					char *result;
+
+					result = changewords_1(word2, initial_o1, end_o1);
+					strcpy(expressions[expression_iter], result);
+					expression_iter++;
+				}
+
+				v_iter1++;
+			}
+
+
+			v_iter2++;
+		}
+
+		int iter = 0;
+		while (iter < expression_iter){
+			char express_data[10][100] = { "" };
+			int exp_iter = 0;
+			char *propery;
+			propery = strtok(expressions[iter], ":=");
+			while (propery != NULL) {
+				printf("%s\n", propery);
+				strcpy(express_data[exp_iter], propery);
+				exp_iter++;
+				propery = strtok(NULL, ":=");
+			}
+			if (exp_iter == 2){
+				if (strchr(express_data[1], '&') != NULL)
+				{
+					printf("Found & Gate");
+					char express_gates[10][100] = { "" };
+					int gate_iter = 0;
+					propery = strtok(express_data[1], "&");
+					while (propery != NULL) {
+						printf("%s\n", propery);
+						strcpy(express_gates[gate_iter], propery);
+						gate_iter++;
+						propery = strtok(NULL, "&");
+					}
+
+					char property[1000] = { "" };
+					strcpy(property, "SPEC AG (( ");
+					strcat(property, replace_char(express_gates[0], '"', '!', ')', '('));
+					strcat(property, " =TRUE & ");
+					strcat(property, replace_char(express_gates[1], '"', ';', ')', '('));
+					strcat(property, " =TRUE) -> AF ( ");
+					strcat(property, replace_char(express_data[0], '"', ';', ')', '('));
+					strcat(property, "=TRUE))");
+					strcat(property, "\n");
+
+					strcat(property, "SPEC AG (( ");
+					strcat(property, replace_char(express_gates[0], '"', '!', ')', '('));
+					strcat(property, " =FALSE & ");
+					strcat(property, replace_char(express_gates[1], '"', ';', ')', '('));
+					strcat(property, " =TRUE) -> AF ( ");
+					strcat(property, replace_char(express_data[0], '"', ';', ')', '('));
+					strcat(property, "=TRUE))");
+					strcat(property, "\n");
+
+					strcat(property, "SPEC AG (( !");
+					strcat(property, replace_char(express_gates[0], '"', '!', ')', '('));
+					strcat(property, " = ");
+					strcat(property, replace_char(express_gates[1], '"', ';', ')', '('));
+					strcat(property, " ) -> AF ( ");
+					strcat(property, replace_char(express_data[0], '"', ';', ')', '('));
+					strcat(property, "=TRUE))");
+					strcat(property, "\n");
+
+					strcat(property, "SPEC AG (( ");
+					strcat(property, replace_char(express_gates[0], '"', '!', ')', '('));
+					strcat(property, " = ");
+					strcat(property, replace_char(express_gates[1], '"', ';', ')', '('));
+					strcat(property, " ) -> AF ( ");
+					strcat(property, replace_char(express_data[0], '"', ';', ')', '('));
+					strcat(property, "=TRUE))");
+					strcat(property, "\n");
+
+
+					FILE *fPtr;
+					fPtr = fopen(str, "a");
+					if (fPtr == NULL)
+					{
+						/* Unable to open file hence exit */
+						printf("\nUnable to open '%s' file.\n", str);
+						printf("Please check whether file exists and you have write privilege.\n");
+						exit(EXIT_FAILURE);
+					}
+					else{
+						fputs(property, fPtr);
+					}
+					fclose(fPtr);
+
+				}
+				else  if (strchr(express_data[1], '|') != NULL)
+				{
+					printf("Found | Gate");
+					char express_gates[10][100] = { "" };
+					int gate_iter = 0;
+					propery = strtok(express_data[1], "|");
+					while (propery != NULL) {
+						printf("%s\n", propery);
+						strcpy(express_gates[gate_iter], propery);
+						gate_iter++;
+						propery = strtok(NULL, "|");
+					}
+
+					char property[1000] = { "" };
+					strcpy(property, "SPEC AG (( ");
+					strcat(property, replace_char(express_gates[0], '"', '!', ')', '('));
+					strcat(property, " =TRUE & ");
+					strcat(property, replace_char(express_gates[1], '"', ';', ')', '('));
+					strcat(property, " =TRUE) -> AF ( ");
+					strcat(property, replace_char(express_data[0], '"', ';', ')', '('));
+					strcat(property, "=TRUE))");
+					strcat(property, "\n");
+
+					strcat(property, "SPEC AG (( ");
+					strcat(property, replace_char(express_gates[0], '"', '!', ')', '('));
+					strcat(property, " =FALSE & ");
+					strcat(property, replace_char(express_gates[1], '"', ';', ')', '('));
+					strcat(property, " =TRUE) -> AF ( ");
+					strcat(property, replace_char(express_data[0], '"', ';', ')', '('));
+					strcat(property, "=TRUE))");
+					strcat(property, "\n");
+
+					strcat(property, "SPEC AG (( !");
+					strcat(property, replace_char(express_gates[0], '"', '!', ')', '('));
+					strcat(property, " = ");
+					strcat(property, replace_char(express_gates[1], '"', ';', ')', '('));
+					strcat(property, " ) -> AF ( ");
+					strcat(property, replace_char(express_data[0], '"', ';', ')', '('));
+					strcat(property, "=TRUE))");
+					strcat(property, "\n");
+
+					strcat(property, "SPEC AG (( ");
+					strcat(property, replace_char(express_gates[0], '"', '!', ')', '('));
+					strcat(property, " = ");
+					strcat(property, replace_char(express_gates[1], '"', ';', ')', '('));
+					strcat(property, " ) -> AF ( ");
+					strcat(property, replace_char(express_data[0], '"', ';', ')', '('));
+					strcat(property, "=TRUE))");
+					strcat(property, "\n");
+
+					FILE *fPtr;
+					fPtr = fopen(str, "a");
+					if (fPtr == NULL)
+					{
+						/* Unable to open file hence exit */
+						printf("\nUnable to open '%s' file.\n", str);
+						printf("Please check whether file exists and you have write privilege.\n");
+						exit(EXIT_FAILURE);
+					}
+					else{
+						fputs(property, fPtr);
+					}
+					fclose(fPtr);
+				}
+				else  if (strstr(express_data[1], "xor") != NULL)
+				{
+					printf("Found | Gate");
+					char express_gates[10][100] = { "" };
+					int gate_iter = 0;
+					propery = strtok(express_data[1], "|");
+					while (propery != NULL) {
+						printf("%s\n", propery);
+						strcpy(express_gates[gate_iter], propery);
+						gate_iter++;
+						propery = strtok(NULL, "|");
+					}
+
+					char property[1000] = { "" };
+					strcpy(property, "SPEC AG (( ");
+					strcat(property, replace_char(express_gates[0], '"', '!', ')', '('));
+					strcat(property, " =TRUE & ");
+					strcat(property, replace_char(express_gates[1], '"', ';', ')', '('));
+					strcat(property, " =TRUE) -> AF ( ");
+					strcat(property, replace_char(express_data[0], '"', ';', ')', '('));
+					strcat(property, "=TRUE))");
+					strcat(property, "\n");
+
+					strcat(property, "SPEC AG (( ");
+					strcat(property, replace_char(express_gates[0], '"', '!', ')', '('));
+					strcat(property, " =FALSE & ");
+					strcat(property, replace_char(express_gates[1], '"', ';', ')', '('));
+					strcat(property, " =TRUE) -> AF ( ");
+					strcat(property, replace_char(express_data[0], '"', ';', ')', '('));
+					strcat(property, "=TRUE))");
+					strcat(property, "\n");
+
+					strcat(property, "SPEC AG (( !");
+					strcat(property, replace_char(express_gates[0], '"', '!', ')', '('));
+					strcat(property, " = ");
+					strcat(property, replace_char(express_gates[1], '"', ';', ')', '('));
+					strcat(property, " ) -> AF ( ");
+					strcat(property, replace_char(express_data[0], '"', ';', ')', '('));
+					strcat(property, "=TRUE))");
+					strcat(property, "\n");
+
+					strcat(property, "SPEC AG (( ");
+					strcat(property, replace_char(express_gates[0], '"', '!', ')', '('));
+					strcat(property, " = ");
+					strcat(property, replace_char(express_gates[1], '"', ';', ')', '('));
+					strcat(property, " ) -> AF ( ");
+					strcat(property, replace_char(express_data[0], '"', ';', ')', '('));
+					strcat(property, "=TRUE))");
+					strcat(property, "\n");
+
+					FILE *fPtr;
+					fPtr = fopen(str, "a");
+					if (fPtr == NULL)
+					{
+						/* Unable to open file hence exit */
+						printf("\nUnable to open '%s' file.\n", str);
+						printf("Please check whether file exists and you have write privilege.\n");
+						exit(EXIT_FAILURE);
+					}
+					else{
+						fputs(property, fPtr);
+					}
+					fclose(fPtr);
+				}
+				else  if (strstr(express_data[1], "xnor") != NULL)
+				{
+					printf("Found | Gate");
+					char express_gates[10][100] = { "" };
+					int gate_iter = 0;
+					propery = strtok(express_data[1], "|");
+					while (propery != NULL) {
+						printf("%s\n", propery);
+						strcpy(express_gates[gate_iter], propery);
+						gate_iter++;
+						propery = strtok(NULL, "|");
+					}
+
+					char property[1000] = { "" };
+					strcpy(property, "SPEC AG (( ");
+					strcat(property, replace_char(express_gates[0], '"', '!', ')', '('));
+					strcat(property, " =TRUE & ");
+					strcat(property, replace_char(express_gates[1], '"', ';', ')', '('));
+					strcat(property, " =TRUE) -> AF ( ");
+					strcat(property, replace_char(express_data[0], '"', ';', ')', '('));
+					strcat(property, "=TRUE))");
+					strcat(property, "\n");
+
+					strcat(property, "SPEC AG (( ");
+					strcat(property, replace_char(express_gates[0], '"', '!', ')', '('));
+					strcat(property, " =FALSE & ");
+					strcat(property, replace_char(express_gates[1], '"', ';', ')', '('));
+					strcat(property, " =TRUE) -> AF ( ");
+					strcat(property, replace_char(express_data[0], '"', ';', ')', '('));
+					strcat(property, "=TRUE))");
+					strcat(property, "\n");
+
+					strcat(property, "SPEC AG (( !");
+					strcat(property, replace_char(express_gates[0], '"', '!', ')', '('));
+					strcat(property, " = ");
+					strcat(property, replace_char(express_gates[1], '"', ';', ')', '('));
+					strcat(property, " ) -> AF ( ");
+					strcat(property, replace_char(express_data[0], '"', ';', ')', '('));
+					strcat(property, "=TRUE))");
+					strcat(property, "\n");
+
+					strcpy(property, "SPEC AG (( ");
+					strcat(property, replace_char(express_gates[0], '"', '!', ')', '('));
+					strcat(property, " = ");
+					strcat(property, replace_char(express_gates[1], '"', ';', ')', '('));
+					strcat(property, " ) -> AF ( ");
+					strcat(property, replace_char(express_data[0], '"', ';', ')', '('));
+					strcat(property, "=TRUE))");
+					strcat(property, "\n");
+
+					FILE *fPtr;
+					fPtr = fopen(str, "a");
+					if (fPtr == NULL)
+					{
+						/* Unable to open file hence exit */
+						printf("\nUnable to open '%s' file.\n", str);
+						printf("Please check whether file exists and you have write privilege.\n");
+						exit(EXIT_FAILURE);
+					}
+					else{
+						fputs(property, fPtr);
+					}
+					fclose(fPtr);
+				}
+			}
+			else{
+				printf("There is an error \n");
+				scanf("%c", &ch);
+			}
+			iter++;
+		}
+
+		char smvexepath[1000] = "C:\\Users\\NEXGEN\\Desktop\\test_smv\\nuXmv-1.1.1-win64\\bin\\nuXmv.exe";
+		char smv_executor[2000] = { "" };
+
+		/* declare a file pointer */
+		FILE    *infile1;
+		char    *buffer1;
+		long    numbytes1;
+
+		infile1 = fopen("C:\\Users\\NEXGEN\\Desktop\\test_smv\\process.txt", "r");
+		/* quit if the file does not exist */
+		if (infile1 == NULL)
+			return 1;
+
+		fseek(infile1, 0L, SEEK_END);
+		numbytes1 = ftell(infile1);
+
+		fseek(infile1, 0L, SEEK_SET);
+
+		buffer1 = (char*)calloc(numbytes1, sizeof(char));
+
+		if (buffer1 == NULL)
+			return 1;
+
+		fread(buffer1, sizeof(char), numbytes1, infile1);
+		fclose(infile1);
+
+		char *result_;
+		char arr[200] = { "" };
+		strcpy(arr, smvexepath);
+		strcat(arr, " ");
+		strcat(arr, str);
+
+		result_ = changewords_1(buffer1, "yourCommandHere", arr);
+		FILE *fPtr1;
+		char cmd_file_path[50] = "C:\\Users\\NEXGEN\\Desktop\\test_smv\\test1.cmd";
+		fPtr1 = fopen(cmd_file_path, "w");
+		if (fPtr1 == NULL)
+		{
+			/* Unable to open file hence exit */
+			printf("\nUnable to open '%s' file.\n", "test1.cmd");
+			printf("Please check whether file exists and you have write privilege.\n");
+			exit(EXIT_FAILURE);
+		}
+		else{
+			fputs(result_, fPtr1);
+		}
+		fclose(fPtr1);
+		system(cmd_file_path);
+
+
+
+	}
+	else /* Substring not found */
+	{
+		printf("'%s' doesn't contain '%s'\n", str, "VAR");
+	}
+
+	/* free the memory we used for the buffer */
+	free(buffer);
+	printf("Press Enter to Exit \n");
+	scanf("%c", &ch);
+	return 0;
+}
